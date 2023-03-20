@@ -4,6 +4,7 @@ import {
   ref,
   push,
   onValue,
+  remove,
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
 const appSettings = {
@@ -22,24 +23,44 @@ const tasksList = document.getElementById("tasks-list");
 
 addButtonEl.addEventListener("click", function () {
   let inputValue = inputFieldEl.value;
-  push(tasksInDB, inputValue);
-  resetForm();
+  if (inputValue) {
+    push(tasksInDB, inputValue);
+    resetForm();
+  }
 });
 
 onValue(tasksInDB, function (snapshot) {
-  let listItems = Object.values(snapshot.val());
-  resetList();
-  listItems.forEach((item) => addTask(item));
+  if (snapshot.exists()) {
+    let listItems = Object.entries(snapshot.val());
+    resetList();
+    listItems.forEach((item) => {
+      addTask(item);
+    });
+    return;
+  }
+  tasksList.innerHTML = "No items here...";
 });
 
 const resetForm = () => {
   inputFieldEl.value = "";
 };
 
-const addTask = (value) => {
-  tasksList.innerHTML += `<li>${value}</li>`;
-};
-
 const resetList = () => {
   tasksList.innerHTML = "";
+};
+
+const addTask = (item) => {
+  let itemID = item[0];
+  let itemValue = item[1];
+
+  let newEl = document.createElement("li");
+
+  newEl.textContent = itemValue;
+
+  newEl.addEventListener("dblclick", () => {
+    let exactLocationOfTaskInDB = ref(database, `tasks/${itemID}`);
+    remove(exactLocationOfTaskInDB);
+  });
+
+  tasksList.append(newEl);
 };
