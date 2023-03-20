@@ -3,6 +3,7 @@ import {
   getDatabase,
   ref,
   push,
+  onValue,
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
 const appSettings = {
@@ -22,8 +23,23 @@ const tasksList = document.getElementById("tasks-list");
 addButtonEl.addEventListener("click", function () {
   let inputValue = inputFieldEl.value;
   push(tasksInDB, inputValue);
-  tasksList.innerHTML += `<li>${inputValue}</li>`;
-  inputFieldEl.value = "";
-
-  console.log(`${inputValue} added to database`);
+  resetForm();
 });
+
+onValue(tasksInDB, function (snapshot) {
+  let listItems = Object.values(snapshot.val());
+  resetList();
+  listItems.forEach((item) => addTask(item));
+});
+
+const resetForm = () => {
+  inputFieldEl.value = "";
+};
+
+const addTask = (value) => {
+  tasksList.innerHTML += `<li>${value}</li>`;
+};
+
+const resetList = () => {
+  tasksList.innerHTML = "";
+};
